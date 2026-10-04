@@ -4,13 +4,14 @@
 
 **NeurIPS 2026**
 
-[Hangke Sui](mailto:hangkes2@illinois.edu)<sup>1,3\*</sup> &nbsp;·&nbsp;
-[Yuqing Wang](mailto:yuqing14@illinois.edu)<sup>2,3\*</sup> &nbsp;·&nbsp;
+<u>[Hangke Sui](mailto:hangkes2@illinois.edu)</u><sup>1,3\*</sup> &nbsp;·&nbsp;
+<u>[Yuqing Wang](mailto:yuqing14@illinois.edu)</u><sup>2,3\*</sup> &nbsp;·&nbsp;
 [Minh N. Do](mailto:minhdo@illinois.edu)<sup>1,2,3,4</sup>
+
+<sup>\*</sup> **Underlined names: equal contribution**
 
 <sup>1</sup>ECE, UIUC &nbsp; <sup>2</sup>Siebel School of Computing and Data Science, UIUC &nbsp;
 <sup>3</sup>Coordinated Science Laboratory, UIUC &nbsp; <sup>4</sup>VinUni-Illinois Smart Health Center
-<br><sup>\*</sup>Equal contribution
 
 [![arXiv](https://img.shields.io/badge/arXiv-2604.16678-b31b1b.svg)](https://arxiv.org/abs/2604.16678)
 [![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-E8833A.svg)](https://arxiv.org/abs/2604.16678)

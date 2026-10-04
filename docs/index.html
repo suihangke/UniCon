@@ -116,7 +116,19 @@
     }
     .authors span { white-space: nowrap; }
     .authors a { color: inherit; }
-    .authors sup, .affils sup { color: var(--blue-deep); font-weight: 700; }
+    .authors u {
+      text-decoration: underline;
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 4px;
+      text-decoration-color: var(--blue);
+    }
+    .authors sup, .affils sup, .eq-note sup { color: var(--blue-deep); font-weight: 700; }
+    .eq-note {
+      margin: 8px 0 0;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--blue-deep);
+    }
     .affils { color: var(--muted); font-size: 15px; margin: 10px auto 4px; max-width: 780px; line-height: 1.55; }
     .note { color: var(--muted); font-size: 14px; }
     .buttons { margin-top: 26px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
@@ -245,17 +257,17 @@
       <span class="rest">Unified Framework for Efficient Contrastive Alignment via Kernels</span>
     </h1>
     <div class="authors">
-      <span>Hangke Sui<sup>1,3*</sup></span>
-      <span>Yuqing Wang<sup>2,3*</sup></span>
+      <span><u>Hangke Sui</u><sup>1,3*</sup></span>
+      <span><u>Yuqing Wang</u><sup>2,3*</sup></span>
       <span>Minh N. Do<sup>1,2,3,4</sup></span>
     </div>
+    <p class="eq-note"><sup>*</sup> Underlined names: equal contribution</p>
     <div class="affils">
       <sup>1</sup>Electrical &amp; Computer Engineering, UIUC &nbsp;·&nbsp;
       <sup>2</sup>Siebel School of Computing and Data Science, UIUC<br>
       <sup>3</sup>Coordinated Science Laboratory, UIUC &nbsp;·&nbsp;
       <sup>4</sup>VinUni-Illinois Smart Health Center
     </div>
-    <div class="note">* Equal contribution</div>
 
     <div class="buttons">
       <a class="btn primary" href="https://arxiv.org/abs/2604.16678">
