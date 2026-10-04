@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UniCon: Unified Framework for Efficient Contrastive Alignment via Kernels</title>
+  <meta name="description" content="UniCon replaces gradient descent on contrastive losses with closed-form spectral updates. NeurIPS 2026.">
+  <meta property="og:title" content="UniCon: Unified Framework for Efficient Contrastive Alignment via Kernels">
+  <meta property="og:description" content="Closed-form contrastive alignment for linear and kernel encoders. Up to 461× faster than SGD on the CLIP loss.">
+  <meta property="og:image" content="static/images/teaser.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600;1,700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+          onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+  <style>
+    :root {
+      --navy: #445866;
+      --blue: #7a98ab;
+      --blue-deep: #5d7a8c;
+      --blue-soft: #e8eef1;
+      --cream: #f7f5f1;
+      --paper: #fbfaf7;
+      --ink: #3d444c;
+      --muted: #7b848c;
+      --line: #ddd8d0;
+      --white: #fffdfb;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.65;
+      font-size: 17.5px;
+    }
+    a { color: var(--blue-deep); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 0 28px; }
+    section { padding: 72px 0; }
+    section.alt { background: var(--cream); }
+    h2 {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 36px; font-weight: 600; letter-spacing: -0.01em;
+      margin: 0 0 8px; text-align: center; color: var(--navy);
+    }
+    .kicker {
+      text-align: center; color: var(--blue-deep); font-weight: 600;
+      font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 8px;
+    }
+    .lead {
+      text-align: center; color: var(--muted); max-width: 640px; margin: 0 auto 32px; font-size: 17px;
+    }
+    h3 {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 24px; font-weight: 600; margin: 36px 0 10px; color: var(--navy);
+    }
+    p { margin: 0 0 14px; }
+    figure { margin: 28px 0 4px; }
+    figure img {
+      width: 100%; border-radius: 12px; border: 1px solid var(--line);
+      background: var(--white); display: block;
+    }
+    figcaption { color: var(--muted); font-size: 15px; margin-top: 12px; text-align: center; line-height: 1.5; }
+
+    nav {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(251, 250, 247, 0.9);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 58px;
+    }
+    .logo {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-style: italic; font-weight: 700; font-size: 24px;
+      color: var(--blue-deep); letter-spacing: 0.01em;
+    }
+    .logo:hover { text-decoration: none; color: var(--navy); }
+    .nav-links { display: flex; gap: 22px; }
+    .nav-links a { color: var(--muted); font-weight: 500; font-size: 15px; }
+    .nav-links a:hover { color: var(--navy); text-decoration: none; }
+
+    header.hero {
+      text-align: center; padding: 72px 0 32px;
+      background: linear-gradient(180deg, #eef2f3 0%, var(--paper) 72%);
+    }
+    .venue {
+      display: inline-block; padding: 5px 14px; border-radius: 999px;
+      font-weight: 600; font-size: 12px; letter-spacing: 0.12em;
+      color: var(--blue-deep); background: var(--blue-soft);
+      border: 1px solid #d2dde3;
+    }
+    h1 {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      margin: 22px auto 16px; max-width: 820px; color: var(--navy);
+    }
+    h1 .brand {
+      display: block;
+      font-style: italic; font-weight: 700; font-size: 72px; line-height: 0.95;
+      letter-spacing: -0.015em; color: var(--blue-deep);
+    }
+    h1 .rest {
+      display: block; margin-top: 10px;
+      font-style: normal; font-weight: 500; font-size: 26px; line-height: 1.28;
+      color: var(--navy);
+    }
+    .authors {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px;
+      font-size: 17px; font-weight: 600; color: var(--ink);
+    }
+    .authors span { white-space: nowrap; }
+    .authors a { color: inherit; }
+    .authors sup, .affils sup { color: var(--blue-deep); font-weight: 700; }
+    .affils { color: var(--muted); font-size: 15px; margin: 10px auto 4px; max-width: 780px; line-height: 1.55; }
+    .note { color: var(--muted); font-size: 14px; }
+    .buttons { margin-top: 26px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px;
+      border-radius: 999px; font-weight: 600; font-size: 15px;
+      border: 1px solid transparent; transition: background .15s ease, transform .15s ease;
+    }
+    .btn:hover { text-decoration: none; transform: translateY(-1px); }
+    .btn.primary { background: var(--blue-deep); color: #f7f5f1; }
+    .btn.primary:hover { background: var(--navy); }
+    .btn.ghost { background: var(--white); color: var(--navy); border-color: var(--line); }
+    .btn.ghost:hover { border-color: var(--blue); color: var(--blue-deep); }
+    .btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+    .tldr {
+      margin: 32px auto 8px; max-width: 820px; padding: 18px 22px; border-radius: 12px;
+      background: var(--white); border: 1px solid var(--line); border-left: 3px solid var(--blue);
+      text-align: left; font-size: 17px;
+    }
+    .tldr b { color: var(--blue-deep); }
+
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 20px 18px 18px;
+    }
+    .card .big {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-style: italic; font-size: 30px; font-weight: 600; color: var(--blue-deep); line-height: 1.15;
+    }
+    .card .title { font-weight: 700; margin: 8px 0 6px; color: var(--navy); }
+    .card p { color: var(--muted); font-size: 15px; margin: 0; line-height: 1.5; }
+
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+    .step {
+      background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 20px 18px;
+    }
+    .step .num {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--blue);
+      color: #f7f5f1; display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; margin-bottom: 10px;
+    }
+    .step .title { font-weight: 700; margin-bottom: 6px; color: var(--navy); }
+    .step p { color: var(--muted); font-size: 15px; margin: 0; }
+
+    .eq {
+      background: var(--white); border: 1px solid var(--line); border-radius: 12px;
+      padding: 8px 16px; margin: 12px 0; overflow-x: auto;
+    }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .tag {
+      display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em;
+      padding: 3px 9px; border-radius: 999px; margin: 10px 0 0;
+      background: var(--blue-soft); color: var(--blue-deep);
+    }
+
+    pre {
+      background: #465662; color: #e9eee8; border-radius: 12px; padding: 18px 20px;
+      overflow-x: auto; font-family: "JetBrains Mono", monospace; font-size: 13.5px; line-height: 1.65;
+      margin: 14px 0;
+    }
+    pre .c { color: #b7c4c0; }
+    pre .k { color: #c5d6e0; }
+    pre .s { color: #c8d5b8; }
+    code { font-family: "JetBrains Mono", monospace; font-size: 0.88em; }
+    p code, li code {
+      background: var(--blue-soft); border: 1px solid var(--line);
+      padding: 1px 6px; border-radius: 6px; color: var(--navy);
+    }
+
+    .table-wrap {
+      overflow-x: auto; margin: 14px 0 8px; border: 1px solid var(--line); border-radius: 12px;
+    }
+    table { border-collapse: collapse; width: 100%; font-size: 15px; background: var(--white); }
+    th, td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    th { background: var(--navy); color: #f4f1eb; font-weight: 600; font-size: 13.5px; letter-spacing: 0.01em; }
+    th:first-child, td:first-child { text-align: left; }
+    tr:last-child td { border-bottom: 0; }
+    tr.ours td { background: #eef2f0; }
+    tr.ours td.best { color: var(--blue-deep); font-weight: 700; }
+    .caption-note { color: var(--muted); font-size: 14.5px; margin-top: 8px; }
+
+    .bib { position: relative; }
+    .copy {
+      position: absolute; top: 12px; right: 12px; border: 0; border-radius: 8px; cursor: pointer;
+      background: #5d6e78; color: #f7f5f1; padding: 6px 12px; font: 600 13px "Source Sans 3", sans-serif;
+    }
+    .copy:hover { background: var(--navy); }
+    footer {
+      text-align: center; color: #c5ccc8; font-size: 14px;
+      padding: 28px 0; background: var(--navy);
+    }
+    footer a { color: #e8eee8; }
+
+    @media (max-width: 860px) {
+      h1 .brand { font-size: 54px; }
+      h1 .rest { font-size: 21px; }
+      h2 { font-size: 30px; }
+      .cards, .steps, .two { grid-template-columns: 1fr; }
+      .nav-inner { height: auto; flex-wrap: wrap; padding: 10px 0 12px; gap: 8px; }
+      .nav-links { width: 100%; gap: 14px 18px; flex-wrap: wrap; }
+      .nav-links a { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <a class="logo" href="#top">UniCon</a>
+    <div class="nav-links">
+      <a href="#abstract">Abstract</a>
+      <a href="#method">Method</a>
+      <a href="#results">Results</a>
+      <a href="https://github.com/suihangke/UniCon">Code</a>
+      <a href="#bibtex">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <span class="venue">NEURIPS 2026</span>
+    <h1>
+      <span class="brand">UniCon</span>
+      <span class="rest">Unified Framework for Efficient Contrastive Alignment via Kernels</span>
+    </h1>
+    <div class="authors">
+      <span>Hangke Sui<sup>1,3*</sup></span>
+      <span>Yuqing Wang<sup>2,3*</sup></span>
+      <span>Minh N. Do<sup>1,2,3,4</sup></span>
+    </div>
+    <div class="affils">
+      <sup>1</sup>Electrical &amp; Computer Engineering, UIUC &nbsp;·&nbsp;
+      <sup>2</sup>Siebel School of Computing and Data Science, UIUC<br>
+      <sup>3</sup>Coordinated Science Laboratory, UIUC &nbsp;·&nbsp;
+      <sup>4</sup>VinUni-Illinois Smart Health Center
+    </div>
+    <div class="note">* Equal contribution</div>
+
+    <div class="buttons">
+      <a class="btn primary" href="https://arxiv.org/abs/2604.16678">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm-1 7V3.5L18.5 9z"/></svg>arXiv</a>
+      <a class="btn ghost" href="https://arxiv.org/pdf/2604.16678">
+        <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6zm8 1.5V8h4.5zM8 13h8v1.5H8zm0 3h8V18H8z"/></svg>PDF</a>
+      <a class="btn ghost" href="https://github.com/suihangke/UniCon">
+        <svg viewBox="0 0 24 24"><path d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5"/></svg>Code</a>
+      <a class="btn ghost" href="#bibtex">
+        <svg viewBox="0 0 24 24"><path d="M7 4h7v2H9v12h8v2H7zM17 8l4 4-4 4v-3h-5v-2h5z"/></svg>BibTeX</a>
+    </div>
+
+    <div class="tldr">
+      <b>TL;DR</b> &nbsp;Training with a contrastive loss only tracks the top-<i>r</i> singular subspace of a
+      weighted cross-covariance. UniCon builds that operator explicitly through a
+      <b>contrastive similarity weight matrix</b> \(S(\gamma)\) and solves alignment in
+      <b>closed form</b> — one SVD for linear encoders, a kernelized SVD for nonlinear ones —
+      instead of thousands of SGD steps.
+    </div>
+  </div>
+</header>
+
+<section style="padding-top: 8px; padding-bottom: 48px">
+  <div class="wrap">
+    <figure>
+      <img src="static/images/teaser.png" alt="UniCon overview">
+      <figcaption>
+        UniCon builds \(S(\gamma)\) from the hyperspherical similarities of a batch and then performs either
+        a closed-form SVD update (linear encoders, orange) or a kernelized update (nonlinear encoders, blue).
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="alt" id="highlights">
+  <div class="wrap">
+    <p class="kicker">Overview</p>
+    <h2>Highlights</h2>
+    <p class="lead">One spectral characterization covers linear and kernel encoders, and every loss in the contrastive family.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="big">0 SGD</div>
+        <div class="title">Closed-form solution</div>
+        <p>The optimum is a best rank-<i>r</i> approximation. No backpropagation and no learning rate.</p>
+      </div>
+      <div class="card">
+        <div class="big">Unified</div>
+        <div class="title">Linear and kernel</div>
+        <p>Linear encoders are the linear-kernel case of one RKHS spectral characterization.</p>
+      </div>
+      <div class="card">
+        <div class="big">Any loss</div>
+        <div class="title">Contrastive family</div>
+        <p>CLIP / InfoNCE, triplet, sigmoid, and many-to-many alignment via \((\psi,\phi,\nu,\epsilon)\).</p>
+      </div>
+      <div class="card">
+        <div class="big">461×</div>
+        <div class="title">Faster training</div>
+        <p>Seconds instead of hours on MSCOCO, with competitive or better retrieval.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="abstract">
+  <div class="wrap">
+    <p class="kicker">Paper</p>
+    <h2>Abstract</h2>
+    <p>
+      Contrastive objectives power state-of-the-art multimodal models, but their training remains slow,
+      relying on long stochastic optimization. We propose a Unified Framework for Efficient Contrastive
+      Alignment via Kernels (UniCon), which spans linear and nonlinear encoders as well as one-to-one and
+      many-to-many alignments. At its core, UniCon introduces the contrastive similarity weight matrix
+      \(S(\gamma)\), which enables closed-form global solutions that provably replace minibatch
+      back-propagation with exact updates. Through the lens of reproducing kernel Hilbert spaces (RKHS),
+      UniCon provides a kernelized perspective that unifies contrastive alignment and reveals its connection
+      to spectral methods. To validate the theory, we conduct experiments on synthetic, unimodal, multimodal,
+      and zero-shot tasks, demonstrating that UniCon achieves substantial efficiency gains while preserving
+      generality and strong empirical performance.
+    </p>
+  </div>
+</section>
+
+<section class="alt" id="method">
+  <div class="wrap">
+    <p class="kicker">Approach</p>
+    <h2>Method</h2>
+    <p class="lead">Similarity, then \(S(\gamma)\), then one spectral update. The fixed point settles in a couple of steps.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <div class="title">A unified contrastive loss</div>
+        <p>CLIP, InfoNCE, triplet, and SupCon-style losses are instances of one family, set by
+          \(\psi,\phi\), the positive weight \(\nu\), and pair weights \(\epsilon_{ij}\).</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <div class="title">Contrastive similarity weight \(S(\gamma)\)</div>
+        <p>Its gradient equals that of a trace objective weighted by \(S(\gamma)\): positive pairs are
+          pulled, negatives are pushed.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <div class="title">Closed-form spectral update</div>
+        <p>The trace objective is maximized by a best rank-<i>r</i> approximation, in the ambient space or in an RKHS.</p>
+      </div>
+    </div>
+
+    <h3>Generalized contrastive loss</h3>
+    <p>For a batch with hyperspherical similarities \(s_{ij} = \langle f_{\theta_1}(x_i), f_{\theta_2}(y_j)\rangle\)
+      and positive sets \(P_x(i)\), \(P_y(j)\):</p>
+    <div class="eq">$$\mathcal{L} = \frac{1}{2n}\sum_{i=1}^n \frac{1}{|P_x(i)|}\sum_{k\in P_x(i)}
+      \phi\Big(\sum_{j\notin P_x(i)} \epsilon_{ij}\,\psi(s_{ij}-\nu s_{ik}) + \epsilon_{ik}\,\psi\big((1-\nu)s_{ik}\big)\Big)
+      \;+\; (\text{same for } y) .$$</div>
+
+    <h3>Lemma (gradient equivalence)</h3>
+    <p>With the contrastive similarity weight matrix
+      \(S(\gamma) = -\frac{1}{n}\sum_{i,j}\tfrac12\big(\tfrac{\gamma_{ij}}{|P_x(i)|}+\tfrac{\bar\gamma_{ji}}{|P_y(j)|}\big)e_ie_j^\top\),</p>
+    <div class="eq">$$\frac{\partial \mathcal{L}}{\partial \theta_k}
+      = -\,\frac{\partial\, \mathrm{tr}\big(F_{\theta_1}(X)\, S(\gamma)\, F_{\theta_2}(Y)^\top\big)}{\partial \theta_k}\bigg|_{\gamma=\gamma(\theta_1,\theta_2)},
+      \qquad k\in\{1,2\}.$$</div>
+    <p>Minimizing the contrastive loss is therefore maximizing \(\mathrm{tr}(F_{\theta_1}(X) S(\gamma) F_{\theta_2}(Y)^\top) - \tfrac{\rho}{2}\|\cdot\|_F^2\),
+      whose maximizers are known in closed form:</p>
+
+    <div class="two">
+      <div class="eq">
+        <span class="tag">LINEAR ENCODERS</span>
+        $$\begin{aligned} C(\gamma) &= X S(\gamma) Y^\top = U\Sigma V^\top \\
+        F_1^\top F_2 &= \frac{1}{\rho}\sum_{i=1}^r \sigma_i u_i v_i^\top \end{aligned}$$
+      </div>
+      <div class="eq">
+        <span class="tag">KERNEL ENCODERS (RKHS)</span>
+        $$\begin{aligned} M &= K_X^{1/2} S(\gamma) K_Y^{1/2} \\
+        AB^\top &= \frac{1}{\rho} K_X^{-1/2}\,[M]_r\,K_Y^{-1/2} \end{aligned}$$
+      </div>
+    </div>
+    <p>Because \(S(\gamma)\) depends on the current encoders, UniCon alternates
+      <i>similarity → \(S(\gamma)\) → spectral update</i>. Mini-batch solutions are fused with validation weights.</p>
+
+    <h3>The core in code</h3>
+    <p>The method rests on two functions in <code>unicon/core/s_gamma.py</code>:
+      <code>compute_S_gamma</code> (one-to-one, Listing 1) and <code>compute_S_gamma_generalized</code>
+      (many-to-many, Listing 2). The solvers only add the SVD.</p>
+<pre><span class="k">from</span> unicon <span class="k">import</span> compute_S_gamma, clip_loss, LinearUniCon, KernelUniCon
+
+S = compute_S_gamma(s, **clip_loss(tau=<span class="s">1.0</span>).s_gamma_kwargs)  <span class="c"># (n, n) contrastive similarity weights</span>
+C = X.T @ S @ Y                                              <span class="c"># weighted contrastive cross-covariance</span>
+
+model = LinearUniCon(r=<span class="s">128</span>).fit(X, Y, batch_size=<span class="s">4096</span>, n_iters=<span class="s">2</span>)  <span class="c"># Algorithm 1</span>
+model = KernelUniCon(r=<span class="s">10</span>, kernel=<span class="s">"angular"</span>).fit(X, Y, batch_size=<span class="s">30</span>)  <span class="c"># Algorithm 2</span></pre>
+  </div>
+</section>
+
+<section id="results">
+  <div class="wrap">
+    <p class="kicker">Experiments</p>
+    <h2>Results</h2>
+    <p class="lead">Closed-form alignment matches or beats SGD-CLIP, in seconds rather than hours.</p>
+
+    <h3>Seconds instead of hours</h3>
+    <figure>
+      <img src="static/images/speedup.png" alt="Training time of UniCon vs SGD-CLIP">
+      <figcaption>Wall-clock training time reported in the paper (single NVIDIA L40S).</figcaption>
+    </figure>
+
+    <h3>One spectral step reaches what SGD reaches after many epochs</h3>
+    <figure>
+      <img src="static/images/convergence.png" alt="Accuracy vs. training time">
+      <figcaption>Test matching accuracy vs. wall-clock time on the synthetic latent-factor models.
+        UniCon (★) is a single closed-form solve; SGD-CLIP is trained with AdamW.</figcaption>
+    </figure>
+
+    <h3>Aligned representations</h3>
+    <figure>
+      <img src="static/images/tsne.png" alt="t-SNE of the shared space">
+      <figcaption>Linear latent-factor model with three clusters. Two modalities in different spaces (left) are
+        mapped into one shared space. SGD-CLIP and UniCon recover the same aligned, cluster-preserving
+        structure. UniCon does it in a single spectral step.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="static/images/s_gamma.png" alt="Evolution of S(gamma)">
+      <figcaption>Evolution of \(S(\gamma)\) for the nonlinear model, from a random initial similarity.
+        The positive (diagonal) and negative weights settle within a couple of updates.</figcaption>
+    </figure>
+
+    <h3>Image–text retrieval on Flickr30K</h3>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Backbone</th><th>Method</th><th>Train time</th><th>I→T R@1</th><th>I→T R@10</th><th>T→I R@1</th><th>T→I R@10</th></tr>
+        <tr><td rowspan="2">RN-18 + SBERT</td><td>SGD-CLIP</td><td>45.6 s</td><td>.043</td><td>.221</td><td>.041</td><td>.217</td></tr>
+        <tr class="ours"><td>UniCon</td><td class="best">1.7 s</td><td>.020</td><td>.145</td><td class="best">.087</td><td class="best">.361</td></tr>
+        <tr><td rowspan="2">RN-50 + SBERT</td><td>SGD-CLIP</td><td>45.0 s</td><td>.043</td><td>.221</td><td>.041</td><td>.217</td></tr>
+        <tr class="ours"><td>UniCon</td><td class="best">0.81 s</td><td class="best">.134</td><td class="best">.464</td><td class="best">.188</td><td class="best">.567</td></tr>
+        <tr><td rowspan="2">CLIP ViT-B/32</td><td>SGD-CLIP</td><td>45.3 s</td><td>.231</td><td>.595</td><td>.241</td><td>.600</td></tr>
+        <tr class="ours"><td>UniCon</td><td class="best">0.76 s</td><td class="best">.284</td><td class="best">.636</td><td class="best">.421</td><td class="best">.777</td></tr>
+      </table>
+    </div>
+
+    <h3>MSCOCO and zero-shot transfer to Flickr30K</h3>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Backbone</th><th>Method</th><th>Train time</th><th>I→T R@1</th><th>I→T R@10</th><th>T→I R@1</th><th>T→I R@10</th><th>Flickr30K R@5 (I→T / T→I)</th></tr>
+        <tr><td rowspan="2">RN-50 + SBERT</td><td>SGD-CLIP</td><td>5121.72 s</td><td>.053</td><td>.253</td><td>.060</td><td>.286</td><td>—</td></tr>
+        <tr class="ours"><td>UniCon</td><td class="best">11.11 s</td><td class="best">.105</td><td class="best">.388</td><td class="best">.129</td><td class="best">.439</td><td>.171 / .249</td></tr>
+        <tr><td rowspan="2">CLIP ViT-B/32</td><td>SGD-CLIP</td><td>1066.60 s</td><td>.128</td><td>.415</td><td>.123</td><td>.427</td><td>—</td></tr>
+        <tr class="ours"><td>UniCon</td><td class="best">11.15 s</td><td class="best">.329</td><td class="best">.685</td><td class="best">.292</td><td class="best">.644</td><td>.808 / .766</td></tr>
+      </table>
+    </div>
+    <p class="caption-note">All models are trained on MSCOCO. Flickr30K is evaluated without any adaptation. Highlighted rows are UniCon.</p>
+  </div>
+</section>
+
+<section class="alt" id="bibtex">
+  <div class="wrap">
+    <p class="kicker">Cite</p>
+    <h2>BibTeX</h2>
+    <div class="bib">
+      <button class="copy" onclick="copyBib(this)">Copy</button>
+<pre id="bibtext">@inproceedings{sui2026unicon,
+  title     = {UniCon: Unified Framework for Efficient Contrastive Alignment via Kernels},
+  author    = {Sui, Hangke and Wang, Yuqing and Do, Minh N.},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2026}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Supported in part by ARPA-H and the IBM–Illinois Discovery Accelerator Institute.
+    &nbsp;·&nbsp; <a href="https://arxiv.org/abs/2604.16678">arXiv</a>
+    &nbsp;·&nbsp; <a href="https://github.com/suihangke/UniCon">Code</a>
+  </div>
+</footer>
+
+<script>
+  function copyBib(btn) {
+    navigator.clipboard.writeText(document.getElementById("bibtext").innerText);
+    btn.textContent = "Copied";
+    setTimeout(() => (btn.textContent = "Copy"), 1500);
+  }
+</script>
+</body>
+</html>
