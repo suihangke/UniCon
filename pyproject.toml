@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "unicon"
 version = "0.1.0"
-description = "UniCon: Unified Framework for Efficient Contrastive Alignment via Kernels (NeurIPS 2026)"
+description = "UniCon: Unified Framework for Efficient Contrastive Alignment via Kernels (ICLR 2026)"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.9"

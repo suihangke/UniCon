@@ -2,7 +2,7 @@
 
 # UniCon: Unified Framework for Efficient Contrastive Alignment via Kernels
 
-**NeurIPS 2026**
+**ICLR 2026**
 
 <u>[Hangke Sui](mailto:hangkes2@illinois.edu)</u><sup>1,3\*</sup> &nbsp;·&nbsp;
 <u>[Yuqing Wang](mailto:yuqing14@illinois.edu)</u><sup>2,3\*</sup> &nbsp;·&nbsp;
@@ -14,7 +14,7 @@
 <sup>3</sup>Coordinated Science Laboratory, UIUC &nbsp; <sup>4</sup>VinUni-Illinois Smart Health Center
 
 [![arXiv](https://img.shields.io/badge/arXiv-2604.16678-b31b1b.svg)](https://arxiv.org/abs/2604.16678)
-[![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-E8833A.svg)](https://arxiv.org/abs/2604.16678)
+[![ICLR 2026](https://img.shields.io/badge/ICLR-2026-4B8BBE.svg)](https://arxiv.org/abs/2604.16678)
 [![Project Page](https://img.shields.io/badge/Project-Page-4C78C8.svg)](https://suihangke.github.io/UniCon/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
 
@@ -175,7 +175,7 @@ docs/                  project page
 @inproceedings{sui2026unicon,
   title     = {UniCon: Unified Framework for Efficient Contrastive Alignment via Kernels},
   author    = {Sui, Hangke and Wang, Yuqing and Do, Minh N.},
-  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  booktitle = {International Conference on Learning Representations (ICLR)},
   year      = {2026}
 }
 ```
