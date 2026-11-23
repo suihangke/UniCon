@@ -14,7 +14,7 @@
 <sup>3</sup>Coordinated Science Laboratory, UIUC &nbsp; <sup>4</sup>VinUni-Illinois Smart Health Center
 
 [![arXiv](https://img.shields.io/badge/arXiv-2604.16678-b31b1b.svg)](https://arxiv.org/abs/2604.16678)
-[![ICLR 2026](https://img.shields.io/badge/ICLR-2026-4B8BBE.svg)](https://arxiv.org/abs/2604.16678)
+[![ICLR 2026](https://img.shields.io/badge/ICLR-2026-4B8BBE.svg)](https://openreview.net/pdf?id=BjL4CSNJug)
 [![Project Page](https://img.shields.io/badge/Project-Page-4C78C8.svg)](https://suihangke.github.io/UniCon/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
 
